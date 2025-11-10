@@ -2,6 +2,7 @@
 #include <manager_shader.h>
 #include <memory>
 #include <GL/glew.h>
+#include <glm/gtc/type_ptr.hpp>
 
 std::shared_ptr<ShaderData> ManagerShader::load_shader(const std::string& name, const char *vertex_source, const char *fragment_source)
 {
@@ -71,4 +72,25 @@ unsigned int ManagerShader::create_program(unsigned int vertex_shader, unsigned 
     glDeleteShader(fragment_shader);
 
     return (id);
+}
+
+
+void ManagerShader::set_matrix4(unsigned int program, std::string name, const glm::mat4 &matrix)
+{
+    glUniformMatrix4fv(
+        glGetUniformLocation(program, name.c_str()),
+        1,
+        false,
+        glm::value_ptr(matrix)
+    );
+}
+
+void ManagerShader::set_integer(unsigned int program, std::string name, int value)
+{
+    glUniform1i(glGetUniformLocation(program, name.c_str()), value);
+}
+
+void ManagerShader::set_float(unsigned int program, std::string name, int value)
+{
+    glUniform1f(glGetUniformLocation(program, name.c_str()), value);
 }

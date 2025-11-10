@@ -2,19 +2,18 @@
 #include <string>
 #include <manager_mesh.h>
 #include <manager_shader.h>
+#include <glm/glm.hpp>
 
 struct Transform
 {
-    float x = 0;
-    float y = 0;
-    float z = 0;
+    glm::vec3 position;
+    glm::vec3 scale;
+    glm::vec3 rotation;
 };
 
 struct Velocity
 {
-    float dx = 0;
-    float dy = 0;
-    float dz = 0;
+    glm::vec3 velocity;
 };
 
 struct Mesh
