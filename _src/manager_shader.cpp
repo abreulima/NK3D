@@ -1,8 +1,12 @@
 #include <cstddef>
+#include <GL/glew.h>
 #include <manager_shader.h>
 #include <memory>
-#include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
+
+#include <iterator>
+#include <string>
+#include <fstream>
 
 std::shared_ptr<ShaderData> ManagerShader::load_shader(const std::string& name, const char *vertex_source, const char *fragment_source)
 {
@@ -14,6 +18,19 @@ std::shared_ptr<ShaderData> ManagerShader::load_shader(const std::string& name, 
 
     shaders[name] = shader;
     return (shader);
+}
+
+std::shared_ptr<ShaderData> ManagerShader::load_shader_from_file(const std::string& name, const std::string path_vertex, const std::string path_fragment)
+{
+
+    auto&& stream_vertex = std::ifstream(path_vertex);
+    auto&& stream_frag = std::ifstream(path_fragment);
+
+    std::string vertex_source = std::string((std::istreambuf_iterator<char>(stream_vertex)), std::istreambuf_iterator<char>());
+    std::string fragment_source = std::string((std::istreambuf_iterator<char>(stream_frag)), std::istreambuf_iterator<char>());
+
+    auto shader = ManagerShader::load_shader(name, vertex_source.c_str(), fragment_source.c_str());
+    return shader;
 }
 
 std::shared_ptr<ShaderData> ManagerShader::get_shader(const std::string& name)
@@ -72,25 +89,4 @@ unsigned int ManagerShader::create_program(unsigned int vertex_shader, unsigned 
     glDeleteShader(fragment_shader);
 
     return (id);
-}
-
-
-void ManagerShader::set_matrix4(unsigned int program, std::string name, const glm::mat4 &matrix)
-{
-    glUniformMatrix4fv(
-        glGetUniformLocation(program, name.c_str()),
-        1,
-        false,
-        glm::value_ptr(matrix)
-    );
-}
-
-void ManagerShader::set_integer(unsigned int program, std::string name, int value)
-{
-    glUniform1i(glGetUniformLocation(program, name.c_str()), value);
-}
-
-void ManagerShader::set_float(unsigned int program, std::string name, int value)
-{
-    glUniform1f(glGetUniformLocation(program, name.c_str()), value);
 }

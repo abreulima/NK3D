@@ -1,19 +1,25 @@
 NAME		:= web/index.html
-CC			:= em++
+NAME_BIN	:= bin/game
+CC			:= c++
+CCEM		:= em++
 INC			:= -I./_inc
 SRCS 		:= $(wildcard _src/*.cpp)
 OBJS		:= $(SRCS:.cpp=.o)
-CFLAGS		:=
+CFLAGS		:= -g -std=c++17
+CLIBS		:= -lSDL3 -lGLEW -lGL
 LFLAGS		:= -s USE_SDL=3 -s FULL_ES3
 SHELL_FILE	:= web/shell.html
 
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(CC) $(INC) $(OBJS) -o $(NAME) $(LFLAGS) --shell-file $(SHELL_FILE)
+	$(CCEM) $(INC) $(OBJS) -o $(NAME) $(LFLAGS) --shell-file $(SHELL_FILE)
+
+desktop: $(OBJS)
+	$(CC) $(INC) $(OBJS) -o $(NAME_BIN) $(CLIBS)
 
 %.o: %.cpp
-	$(CC) -c $< -o $@ $(CFLAGS) $(INC)
+	$(CC) -c $< -o $@ $ $(CFLAGS) $(INC)
 
 fclean: clean
 	rm -f $(NAME)

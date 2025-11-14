@@ -4,9 +4,9 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/glm.hpp>
+#include <GL/glew.h>
 
 struct ShaderData
 {
@@ -26,21 +26,25 @@ struct ShaderData
                 glm::value_ptr(value)
             );
         }
+        else if constexpr (std::is_same_v<T, int>)
+        {
+            glUniform1i
+            (
+                glGetUniformLocation(program_id, name.c_str()),
+                value
+            );
+        }
     }
-
 };
 
 class ManagerShader
 {
     public:
         std::unordered_map<std::string, std::shared_ptr<ShaderData>> shaders;
-        std::shared_ptr<ShaderData> load_shader_from_file(const std::string path_vertex, const std::string path_fragment);
+        std::shared_ptr<ShaderData> load_shader_from_file(const std::string& name, const std::string path_vertex, const std::string path_fragment);
         std::shared_ptr<ShaderData> load_shader(const std::string& name, const char *vertex_source, const char *fragment_source);
         std::shared_ptr<ShaderData> get_shader(const std::string& name);
         void use_shader(const std::string& name);
-        void set_matrix4(unsigned int program, std::string name, const glm::mat4 &matrix);
-        void set_integer(unsigned int program, std::string name, int value);
-        void set_float(unsigned int program, std::string name, int value);
 
     private:
         unsigned int compile_shader(unsigned int type, const char *source);

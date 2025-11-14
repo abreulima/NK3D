@@ -3,24 +3,30 @@
 
 #include <entity.h>
 #include <vector>
+#include <kengine.h>
 
 class System
 {
     public:
-        virtual void update(float dt, std::vector<Entity>& entities) = 0;
         virtual ~System() = default;
 };
 
 class MovementSystem : public System
 {
     public:
-        void update(float dt, std::vector<Entity>& entities) override;
+        static void update(KEngine *k, float dt, std::vector<Entity>& entities);
 };
 
 class SystemRender : public System
 {
     public:
-        void update(float dt, std::vector<Entity>& entities) override;
+        static void update(KEngine *k, float dt, std::vector<Entity>& entities);
+};
+
+class KeyboardSystem : public System
+{
+    public:
+        static void update(KEngine *k, float dt, std::vector<Entity>& entities);
 };
 
 #endif

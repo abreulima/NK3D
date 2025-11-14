@@ -1,14 +1,4 @@
 CompileFlags:
     Add:
-        - -I/home/ide-abre/Documents/K3D/_inc
-        - -I/sgoinfre/ide-abre/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1
-        - -I/sgoinfre/ide-abre/emsdk/upstream/emscripten/cache/sysroot/include/compat
-        - -I/sgoinfre/ide-abre/emsdk/upstream/emscripten/cache/sysroot/include
-        - -I/sgoinfre/ide-abre/emsdk/upstream/lib/clang/20/include
-        - --target=wasm32-unknown-emscripten
-        - -D__EMSCRIPTEN__
+        - -I/home/ivan/Documents/NK3D/_inc
         - -std=c++17
-        - -nostdinc++
-        - -xc++
-    Remove:
-        - -I/usr/include/*

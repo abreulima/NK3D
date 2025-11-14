@@ -21,6 +21,17 @@ class EntityManager
         {
             return entities;
         }
+
+        template <typename T>
+        Entity *get_entitiy()
+        {
+            for (auto &e : entities)
+            {
+                if (e.has_component<T>())
+                    return &e;
+            }
+            return (nullptr);
+        }
 };
 
 

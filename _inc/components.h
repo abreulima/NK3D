@@ -1,3 +1,4 @@
+#include "glm/fwd.hpp"
 #include <memory>
 #include <string>
 #include <manager_mesh.h>
@@ -7,9 +8,18 @@
 struct Transform
 {
     glm::vec3 position;
-    glm::vec3 scale;
+    glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 rotation;
+
+    Transform(  float p_x, float p_y, float p_z,
+                float s_x = 1.0f, float s_y = 1.0f, float s_z = 1.0f)
+        : position(glm::vec3(p_x, p_y, p_z)), scale(glm::vec3(s_x, s_y, s_z)) {}
+
 };
+
+struct Player {};
+struct Camera {};
+struct Keyboard {};
 
 struct Velocity
 {

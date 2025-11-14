@@ -1,7 +1,12 @@
+#include "manager_shader.h"
+#include "systems.h"
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_scancode.h>
 #include <cstdio>
 #include <kengine.h>
 #include <entity.h>
 #include <components.h>
+
 
 void KEngine::Start()
 {
@@ -10,6 +15,12 @@ void KEngine::Start()
     {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error: %s", SDL_GetError());
     }
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     this->window = SDL_CreateWindow(
         "Hello",
@@ -23,19 +34,22 @@ void KEngine::Start()
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error: %s", SDL_GetError());
     }
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-
     this->gl_context = SDL_GL_CreateContext(this->window);
     if (!this->gl_context)
     {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error: %s", SDL_GetError());
     }
 
+    glewExperimental = GL_TRUE; // recommended for core profile
+    GLenum err = glewInit();
+    if (err != GLEW_OK)
+    {
+        printf("GLEW init error: %s\n", glewGetErrorString(err));
+    }
+
     this->is_running = true;
-    Level();
     std::printf("Game is running...\n");
+    Level();
 }
 
 void KEngine::Render()
@@ -44,90 +58,66 @@ void KEngine::Render()
     {
         if (event.type == SDL_EVENT_QUIT)
             is_running = false;
+        else if (event.type == SDL_EVENT_KEY_DOWN)
+            key_state[event.key.scancode] = true;
+        else if (event.type == SDL_EVENT_KEY_UP)
+            key_state[event.key.scancode] = false;
     }
+
+    if (key_state[SDL_SCANCODE_ESCAPE])
+        is_running = false;
 
     // Draw Logic?
     // Perhaps another method... we will see
     //
-    movement_system.update(0.25f, entityManager.get_entities());
+    //movement_system.update(0.25f, entityManager.get_entities());
+
+    KeyboardSystem::update(this, 0.25f, entityManager.get_entities());
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    system_render.update(0.25f, entityManager.get_entities());
+    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_MULTISAMPLE);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    SystemRender::update(this, 0.25f, entityManager.get_entities());
     SDL_GL_SwapWindow(this->window);
 }
 
 void KEngine::Level()
 {
 
-    const std::vector<float> square_vertices = {
-        // Positions (x, y, z)    // Texture coords (u, v)
-        -0.5f, -0.5f, 0.0f,      // Bottom-left
-         0.5f, -0.5f, 0.0f,       // Bottom-right
-         0.5f,  0.5f, 0.0f,         // Top-right
-        -0.5f,  0.5f, 0.0f,       // Top-left
-    };
+    auto basic = manager_shader.load_shader_from_file("basic", "_res/shaders/basic.vs.glsl", "_res/shaders/basic.fs.glsl");
+    auto fox = manager_mesh.load_mesh_from_file("fox", "_res/models/fox.obj");
+    auto cube = manager_mesh.load_mesh_from_file("cube", "_res/models/cube.obj");
+    auto girl = manager_mesh.load_mesh_from_file("girl", "_res/models/girl.obj");
 
-    const std::vector<unsigned int> square_indices = {
-        0, 1, 2,  // First triangle
-        2, 3, 0   // Second triangle
-    };
-
-    manager_mesh.load_mesh_data("square",
-                           square_vertices.data(),
-                           square_vertices.size(),
-                           square_indices.data(),
-                           square_indices.size());
-
-    const char *vertex = R""""(#version 300 es
-    precision mediump float;
-    layout (location = 0) in vec3 aPos; // the position variable has attribute position 0
-
-    out vec4 vertexColor; // specify a color output to the fragment shader
-
-    void main()
-    {
-        gl_Position = vec4(aPos, 1.0); // see how we directly give a vec3 to vec4's constructor
-        vertexColor = vec4(0.5, 0.0, 0.0, 1.0); // set the output variable to a dark-red color
-    })"""";
-
-    const char *frag = R"""(#version 300 es
-    precision mediump float;
-    out vec4 FragColor;
-
-    in vec4 vertexColor; // the input variable from the vertex shader (same name and same type)
-
-    void main()
-    {
-        FragColor = vertexColor;
-    })""";
-
-    const char *vertexShaderSource = {
-        "#version 300 es\n"
-        "in vec4 position;\n"
-        "void main(void) {\n"
-        "  gl_Position = vec4(position.xyz, 1.0);\n"
-        "}\n"
-    };
-
-    const char *fragmentShaderSource = {
-        "#version 300 es\n"
-        "precision mediump float;\n"
-        "out vec4 fragColor;\n"
-        "void main(void) {\n"
-        "  fragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
-        "}\n"
-    };
-
-    manager_shader.load_shader("basic", vertexShaderSource, fragmentShaderSource);
+    Entity camera;
+    entityManager.add_entity(camera);
 
     Entity player;
-    player.add_component<Transform>();
+    player.add_component<Player>();
+    player.add_component<Keyboard>();
+    player.add_component<Transform>(0.0f, 0.0f, 0.0f);
     player.add_component<Velocity>();
-    player.add_component<Shader>(manager_shader.get_shader("basic"), "basic");
-    player.add_component<Mesh>(manager_mesh.get_mesh_data("square"), "square");
+    player.add_component<Mesh>(fox);
+    player.add_component<Shader>(basic);
 
+    Entity obj_two;
+    obj_two.add_component<Transform>(1.0f, 0.5f, 5.0f);
+    obj_two.add_component<Velocity>();
+    obj_two.add_component<Mesh>(cube);
+    obj_two.add_component<Shader>(basic);
+
+
+    Entity girl_e;
+    girl_e.add_component<Transform>(2.0f, 0.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+    girl_e.add_component<Velocity>();
+    girl_e.add_component<Mesh>(girl);
+    girl_e.add_component<Shader>(basic);
+
+    entityManager.add_entity(obj_two);
     entityManager.add_entity(player);
+    entityManager.add_entity(girl_e);
+    entityManager.add_entity(camera);
 }
 
 void KEngine::End()

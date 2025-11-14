@@ -1,16 +1,22 @@
 #ifndef KENGINE_H
 #define KENGINE_H
 
-#include "manager_mesh.h"
-#include <emscripten.h>
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_opengl.h>
+#if __EMSCRIPTEN__
+    #include <emscripten.h>
+    #include <SDL3/SDL.h>
+    #include <SDL3/SDL_opengles2.h>  // Use ES headers for Emscripten
+#else
+    #include <GL/glew.h>
+    #include <SDL3/SDL.h>
+    #include <SDL3/SDL_opengl.h>
+#endif
+
+#include <map>
+
 #include <entity.h>
 #include <manager_entity.h>
 #include <manager_shader.h>
-
-// Systems
-#include <systems.h>
+#include <manager_mesh.h>
 
 class KEngine
 {
@@ -19,6 +25,7 @@ class KEngine
         SDL_Renderer *renderer;
         SDL_GLContext gl_context;
         SDL_Event event;
+        std::map<SDL_Scancode, bool> key_state;
         bool is_running;
         EntityManager entityManager;
         ManagerMesh manager_mesh;
@@ -30,8 +37,6 @@ class KEngine
         void Level();
 
         // Systems
-        MovementSystem movement_system;
-        SystemRender system_render;
 };
 
 #endif

@@ -1,5 +1,6 @@
 #include <kengine.h>
 
+
 void emscripten_loop(void * arg)
 {
     KEngine *engine;
@@ -7,7 +8,9 @@ void emscripten_loop(void * arg)
 
     if (!engine->is_running)
     {
+        #ifdef __EMSCRIPTEN__
         emscripten_cancel_main_loop();
+        #endif
         engine->End();
         return ;
     }
